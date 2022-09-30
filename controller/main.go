@@ -7,18 +7,16 @@ import (
 	"time"
 
 	"github.com/datawire/dlib/dgroup"
+	"github.com/datawire/dlib/dhttp"
 	"github.com/datawire/dlib/dlog"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/cache"
 
 	// "github.com/linkerd/linkerd-smi/pkg/adaptor"
-	"github.com/linkerd/linkerd-smi/pkg/adaptor"
 	spclientset "github.com/linkerd/linkerd2/controller/gen/client/clientset/versioned"
 	k8sAPI "github.com/linkerd/linkerd2/controller/k8s"
 	"github.com/linkerd/linkerd2/pkg/admin"
 	"github.com/linkerd/linkerd2/pkg/k8s"
 	hrclientset "sigs.k8s.io/gateway-api/pkg/client/clientset/versioned"
-	hrinformers "sigs.k8s.io/gateway-api/pkg/client/informers/externalversions/apis/v1alpha2"
+	hrinformers "sigs.k8s.io/gateway-api/pkg/client/informers/externalversions"
 )
 
 func main() {
@@ -48,7 +46,7 @@ func main() {
 		ctx,
 		*kubeConfigPath,
 		false,
-		k8sAPI.SP, k8sAPI.TS,
+		k8sAPI.SP,
 	)
 	if err != nil {
 		dlog.Errorf(ctx, "Failed to initialize K8s API: %s", err)
@@ -68,35 +66,43 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Watch for TrafficSplit changes.
-	hrInformer := hrinformers.NewHTTPRouteInformer(hrClient, v1.NamespaceAll, 10*time.Minute, cache.Indexers{})
+	// Watch for HTTPRoute changes.
+	hrInformerFactory := hrinformers.NewSharedInformerFactory(hrClient, time.Second*30)
+	hrInformers := hrInformerFactory.Gateway().V1alpha2().HTTPRoutes()
 
-	// hrInformerFactory := hrinformers.NewSharedInformerFactory(hrClient, 10*time.Minute)
-
-	controller := adaptor.NewController(
+	controller := NewController(
 		k8sAPI.Client,
 		*clusterDomain,
 		hrClient,
 		spClient,
-		hrInformerFactory.Split().V1alpha1().TrafficSplits(),
+		hrInformers,
 		*workers,
 	)
 
 	grp.Go("admin-server", func(ctx context.Context) error {
-		admin.StartServer(*metricsAddr)
-		return nil
+		adminServer := admin.NewServer(*metricsAddr, true)
+
+		// dhttp.ServerConfig is like http.Server, except that it will pay attention to
+		// our context and manage shutdowns (as well as supporting HTTP/2). Sooooo we're
+		// going to cheat and use a dhttp.ServerConfig to wrap the handler function from
+		// our adminServer.
+		cfg := &dhttp.ServerConfig{
+			Handler: adminServer.Handler,
+		}
+
+		// This feels hacky, using *metricsAddr and trusting that it will be a port
+		// number...
+		return cfg.ListenAndServe(ctx, *metricsAddr)
 	})
 
 	// Start the informer factory.
 	grp.Go("ts-informer-factory", func(ctx context.Context) error {
-		hrInformer.Run(ctx.Done())
+		hrInformerFactory.Start(ctx.Done())
 
-		// hrInformerFactory.Start(ctx.Done())
-
-		// // XXX This is disgusting. Basically the informer factory runs until ctx.Done()
-		// // closes, so, yeah, we'll block here for that.
-		// <-ctx.Done()
-		// return nil
+		// XXX This is disgusting. Basically the informer factory runs until ctx.Done()
+		// closes, so, yeah, we'll block here for that.
+		<-ctx.Done()
+		return nil
 	})
 
 	grp.Go("controller", func(ctx context.Context) error {

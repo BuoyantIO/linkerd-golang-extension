@@ -43,7 +43,6 @@ type (
 	queueKey struct {
 		name      string
 		namespace string
-		service   string
 	}
 )
 
@@ -75,7 +74,7 @@ type GAMMAController struct {
 	hrEventRecorder record.EventRecorder
 }
 
-// NewController returns a new SMI controller
+// NewController returns a new GAMMA controller
 func NewController(
 	kubeclientset kubernetes.Interface,
 	clusterDomain string,
@@ -240,27 +239,27 @@ func (c *GAMMAController) syncHandler(ctx context.Context, hrKey queueKey) error
 		// Check if there is a relevant SP that was created or updated by SMI Controller
 		// and clean up its dstOverrides
 		log.Infof("HTTPRoute/%s is deleted, trying to cleanup the relevant serviceprofile", hrKey.name)
-		sp, err := c.spclientset.LinkerdV1alpha2().ServiceProfiles(hrKey.namespace).Get(ctx, c.toFQDN(hrKey.service, hrKey.namespace), metav1.GetOptions{})
-		if err != nil {
-			// Return nil if not found, as no need to clean up
-			if errors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
+		// sp, err := c.spclientset.LinkerdV1alpha2().ServiceProfiles(hrKey.namespace).Get(ctx, c.toFQDN(hrKey.service, hrKey.namespace), metav1.GetOptions{})
+		// if err != nil {
+		// 	// Return nil if not found, as no need to clean up
+		// 	if errors.IsNotFound(err) {
+		// 		return nil
+		// 	}
+		// 	return err
+		// }
 
-		if ignoreAnnotationPresent(sp) {
-			log.Infof("skipping clean up of serviceprofile/%s as ignore annotation is present", sp.Name)
-			return nil
-		}
+		// if ignoreAnnotationPresent(sp) {
+		// 	log.Infof("skipping clean up of serviceprofile/%s as ignore annotation is present", sp.Name)
+		// 	return nil
+		// }
 
-		// Empty dstOverrides in the SP
-		sp.Spec.DstOverrides = nil
-		_, err = c.spclientset.LinkerdV1alpha2().ServiceProfiles(hrKey.namespace).Update(ctx, sp, metav1.UpdateOptions{})
-		if err != nil {
-			return err
-		}
-		log.Infof("cleaned up `dstOverrides` of serviceprofile/%s", sp.Name)
+		// // Empty dstOverrides in the SP
+		// sp.Spec.DstOverrides = nil
+		// _, err = c.spclientset.LinkerdV1alpha2().ServiceProfiles(hrKey.namespace).Update(ctx, sp, metav1.UpdateOptions{})
+		// if err != nil {
+		// 	return err
+		// }
+		// log.Infof("cleaned up `dstOverrides` of serviceprofile/%s", sp.Name)
 		return nil
 	}
 
@@ -316,42 +315,41 @@ func (c *GAMMAController) enqueueHTTPRoute(hr gatewayapi.HTTPRoute) {
 		queueKey{
 			name:      hr.Name,
 			namespace: hr.Namespace,
-			service:   hr.Spec.Service,
 		})
 }
 
 // updateDstOverrides updates the dstOverrides of the given serviceprofile
 // to match that of the HTTPRoute
-func updateDstOverrides(sp *serviceprofile.ServiceProfile, hr *gatewayapi.HTTPRoute, clusterDomain string) {
-	sp.Spec.DstOverrides = make([]*serviceprofile.WeightedDst, len(hr.Spec.Backends))
-	for i, backend := range hr.Spec.Backends {
-		sp.Spec.DstOverrides[i] = &serviceprofile.WeightedDst{
-			Authority: fqdn(backend.Service, hr.Namespace, clusterDomain),
-			Weight:    *backend.Weight,
-		}
-	}
-}
+// func updateDstOverrides(sp *serviceprofile.ServiceProfile, hr *gatewayapi.HTTPRoute, clusterDomain string) {
+// 	sp.Spec.DstOverrides = make([]*serviceprofile.WeightedDst, len(hr.Spec.Backends))
+// 	for i, backend := range hr.Spec.Backends {
+// 		sp.Spec.DstOverrides[i] = &serviceprofile.WeightedDst{
+// 			Authority: fqdn(backend.Service, hr.Namespace, clusterDomain),
+// 			Weight:    *backend.Weight,
+// 		}
+// 	}
+// }
 
 // toServiceProfile converts the given HTTPRoute into the relevant ServiceProfile resource
-func (c *GAMMAController) toServiceProfile(hr *gatewayapi.HTTPRoute) *serviceprofile.ServiceProfile {
-	spResource := serviceprofile.ServiceProfile{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.toFQDN(hr.Spec.Service, hr.Namespace),
-			Namespace: hr.Namespace,
-		},
-	}
+// func (c *GAMMAController) toServiceProfile(hr *gatewayapi.HTTPRoute) *serviceprofile.ServiceProfile {
+// 	spResource := serviceprofile.ServiceProfile{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      c.toFQDN(hr.Spec.Service, hr.Namespace),
+// 			Namespace: hr.Namespace,
+// 		},
+// 	}
 
-	for _, backend := range hr.Spec.Backends {
-		weightedDst := &serviceprofile.WeightedDst{
-			Authority: c.toFQDN(backend.Service, hr.Namespace),
-			Weight:    *backend.Weight,
-		}
+// 	for _, backend := range hr.Spec.Backends {
+// 		weightedDst := &serviceprofile.WeightedDst{
+// 			Authority: c.toFQDN(backend.Service, hr.Namespace),
+// 			Weight:    *backend.Weight,
+// 		}
 
-		spResource.Spec.DstOverrides = append(spResource.Spec.DstOverrides, weightedDst)
-	}
+// 		spResource.Spec.DstOverrides = append(spResource.Spec.DstOverrides, weightedDst)
+// 	}
 
-	return &spResource
-}
+// 	return &spResource
+// }
 
 func (c *GAMMAController) toFQDN(service, namespace string) string {
 	return fqdn(service, namespace, c.clusterDomain)
