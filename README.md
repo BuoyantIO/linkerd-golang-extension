@@ -37,3 +37,7 @@ with `cmd/main.go`.
 
 [EXTENSIONS.md]: https://github.com/linkerd/linkerd2/blob/main/EXTENSIONS.md
 [Linkerd2 repo]: https://github.com/linkerd/linkerd2/
+
+## Flow diagram
+
+![signal_flow](flow.png)
