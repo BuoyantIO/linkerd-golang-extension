@@ -10,7 +10,6 @@ import (
 	"github.com/datawire/dlib/dhttp"
 	"github.com/datawire/dlib/dlog"
 
-	// "github.com/linkerd/linkerd-smi/pkg/adaptor"
 	spclientset "github.com/linkerd/linkerd2/controller/gen/client/clientset/versioned"
 	k8sAPI "github.com/linkerd/linkerd2/controller/k8s"
 	"github.com/linkerd/linkerd2/pkg/admin"
@@ -71,6 +70,7 @@ func main() {
 	hrInformers := hrInformerFactory.Gateway().V1alpha2().HTTPRoutes()
 
 	controller := NewController(
+		ctx,
 		k8sAPI.Client,
 		*clusterDomain,
 		hrClient,
@@ -107,7 +107,7 @@ func main() {
 
 	grp.Go("controller", func(ctx context.Context) error {
 		// Run the controller until a shutdown signal is received
-		if err = controller.Run(ctx.Done()); err != nil {
+		if err = controller.Run(ctx); err != nil {
 			dlog.Errorf(ctx, "Error running controller: %s", err.Error())
 			return err
 		}
