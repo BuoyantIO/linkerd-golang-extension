@@ -337,6 +337,23 @@ func makeServiceName(name string) string {
 // string which is then put onto the work queue. This method should *not* be
 // passed resources of any type other than TS.
 func (c *GAMMAController) enqueueHTTPRoute(ctx context.Context, hr gatewayapi.HTTPRoute) {
+	if len(hr.Spec.ParentRefs) != 1 {
+		dlog.Infof(ctx, "skipping HTTPRoute/%s as it does not have exactly one parentRef", hr.Name)
+		return
+	}
+
+	pzero := hr.Spec.ParentRefs[0]
+
+	if string(*pzero.Kind) != "Gateway" {
+		dlog.Infof(ctx, "skipping HTTPRoute/%s as its parent isn't a Gateway", hr.Name)
+		return
+	}
+
+	if strings.ToLower(string(pzero.Name)) != "linkerd" {
+		dlog.Infof(ctx, "skipping HTTPRoute/%s as its Gateway isn't named linkerd", hr.Name)
+		return
+	}
+
 	if len(hr.Spec.Rules) != 1 {
 		dlog.Infof(ctx, "skipping HTTPRoute/%s as it does not have exactly one rule", hr.Name)
 		return
