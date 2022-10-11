@@ -5,10 +5,10 @@ clusterDomain: cluster.local
 adaptor:
   image:
     # -- Docker registry for the adaptor instance
-    registry: cr.l5d.io/linkerd
+    registry: dwflynn
     # -- Docker image name for the adaptor instance
-    name: gamma-adaptor
+    name: linkerd-gamma
     # -- Docker image tag for the adaptor instance
-    tag: linkerdgammaVersionValue
+    tag: 0.0.1
     # -- Pull policy  for the adaptor instance
-    pullPolicy: IfNotPresent
+    pullPolicy: Always

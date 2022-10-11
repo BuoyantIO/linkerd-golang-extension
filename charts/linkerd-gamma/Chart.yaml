@@ -1,15 +1,14 @@
 apiVersion: v1
-# this version will be updated by the CI before publishing the Helm tarball
 description: |
   The Linkerd-gamma extension adds gamma adaptor to the Linkerd install
-home: https://linkerd.io
+home: https://buoyant.io
 keywords:
 - service-mesh
 kubeVersion: ">=1.16.0-0"
 name: linkerd-gamma
 sources:
 - https://github.com/buoyantIO/linkerd-gamma-extension/
-version: 1.0.0
+version: 0.0.1
 icon: https://linkerd.io/images/logo-only-200h.png
 maintainers:
   - name: Linkerd authors
