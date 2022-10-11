@@ -3,32 +3,32 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    linkerd.io/extension: HTTPRoute
-    component: HTTPRoute-adaptor
-  name: HTTPRoute-adaptor
+    linkerd.io/extension: gamma
+    component: gamma-adaptor
+  name: gamma-adaptor
   {{ include "partials.namespace" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      linkerd.io/extension: HTTPRoute
-      component: HTTPRoute-adaptor
+      linkerd.io/extension: gamma
+      component: gamma-adaptor
   template:
     metadata:
       annotations:
         linkerd.io/inject: enabled
       labels:
-        linkerd.io/extension: HTTPRoute
-        component: HTTPRoute-adaptor
+        linkerd.io/extension: gamma
+        component: gamma-adaptor
     spec:
       containers:
       - args:
-        - HTTPRoute-adaptor
+        - gamma-adaptor
         - -cluster-domain={{.Values.clusterDomain}}
         image: {{.Values.adaptor.image.registry}}/{{.Values.adaptor.image.name}}:{{.Values.adaptor.image.tag}}
         imagePullPolicy: {{.Values.adaptor.image.pullPolicy}}
-        name: HTTPRoute-adaptor
+        name: gamma-adaptor
         ports:
         - containerPort: 9995
           name: admin-http
-      serviceAccountName: HTTPRoute-adaptor
+      serviceAccountName: gamma-adaptor

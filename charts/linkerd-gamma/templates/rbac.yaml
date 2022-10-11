@@ -1,14 +1,14 @@
 ---
 ###
-### HTTPRoute Adaptor Service
+### Gamma Adaptor Service
 ###
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: HTTPRoute-adaptor
+  name: gamma-adaptor
   labels:
-    linkerd.io/extension: HTTPRoute
-    component: HTTPRoute-adaptor
+    linkerd.io/extension: gamma
+    component: gamma-adaptor
 rules:
 - apiGroups: [""]
   resources: ["events"]
@@ -16,31 +16,31 @@ rules:
 - apiGroups: ["linkerd.io"]
   resources: ["serviceprofiles"]
   verbs: ["list", "get", "create", "update"]
-- apiGroups: ["split.HTTPRoute-spec.io"]
+- apiGroups: ["split.gamma-spec.io"]
   resources: ["trafficsplits"]
   verbs: ["list", "get", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: HTTPRoute-adaptor
+  name: gamma-adaptor
   labels:
-    linkerd.io/extension: HTTPRoute
-    component: HTTPRoute-adaptor
+    linkerd.io/extension: gamma
+    component: gamma-adaptor
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: HTTPRoute-adaptor
+  name: gamma-adaptor
 subjects:
 - kind: ServiceAccount
-  name: HTTPRoute-adaptor
+  name: gamma-adaptor
   namespace: {{.Release.Namespace}}
 ---
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: HTTPRoute-adaptor
+  name: gamma-adaptor
   {{ include "partials.namespace" . }}
   labels:
-    linkerd.io/extension: HTTPRoute
-    component: HTTPRoute-adaptor
+    linkerd.io/extension: gamma
+    component: gamma-adaptor
