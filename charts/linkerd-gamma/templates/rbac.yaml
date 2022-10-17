@@ -16,8 +16,8 @@ rules:
 - apiGroups: ["linkerd.io"]
   resources: ["serviceprofiles"]
   verbs: ["list", "get", "create", "update"]
-- apiGroups: ["split.gamma-spec.io"]
-  resources: ["trafficsplits"]
+- apiGroups: ["gateway.networking.k8s.io"]
+  resources: ["httproutes"]
   verbs: ["list", "get", "watch"]
 ---
 kind: ClusterRoleBinding
