@@ -6,7 +6,7 @@ metadata:
     linkerd.io/extension: gamma
     component: gamma-adaptor
   name: gamma-adaptor
-  {{ include "partials.namespace" . }}
+  namespace: {{.Release.Namespace}}
 spec:
   replicas: 1
   selector:

@@ -40,7 +40,7 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: gamma-adaptor
-  {{ include "partials.namespace" . }}
+  namespace: {{.Release.Namespace}}
   labels:
     linkerd.io/extension: gamma
     component: gamma-adaptor

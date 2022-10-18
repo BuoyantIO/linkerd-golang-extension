@@ -10,6 +10,8 @@ import (
 	pkgcmd "github.com/linkerd/linkerd2/pkg/cmd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	_ "github.com/shurcooL/vfsgen"
 )
 
 const (
@@ -19,7 +21,8 @@ const (
 
 var (
 	lcExtensionName           = strings.ToLower(extensionName)
-	defaultExtensionNamespace = fmt.Sprintf("linkerd-%s", extensionName)
+	fullExtensionName         = fmt.Sprintf("linkerd-%s", lcExtensionName)
+	defaultExtensionNamespace = fullExtensionName
 
 	// special handling for Windows, on all other platforms these resolve to
 	// os.Stdout and os.Stderr, thanks to https://github.com/mattn/go-colorable
@@ -73,10 +76,10 @@ func main() {
 	parser.PersistentFlags().StringArrayVar(&impersonateGroup, "as-group", []string{}, "Group to impersonate for Kubernetes operations")
 	parser.PersistentFlags().StringVar(&apiAddr, "api-addr", "", "Override kubeconfig and communicate directly with the control plane at host:port (mostly for testing)")
 	parser.PersistentFlags().BoolVar(&verbose, "verbose", false, "Turn on debug logging")
-	// parser.AddCommand(newCmdInstall())
-	// parser.AddCommand(newCmdUninstall())
+	parser.AddCommand(newCmdInstall())
+	parser.AddCommand(newCmdUninstall())
 	parser.AddCommand(newCmdVersion())
-	// parser.AddCommand(newCmdCheck())
+	parser.AddCommand(newCmdCheck())
 
 	// resource-aware completion flag configurations
 	pkgcmd.ConfigureNamespaceFlagCompletion(
