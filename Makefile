@@ -21,7 +21,7 @@ registry-check:
 all: images cli
 
 clean:
-	-rm -f cmd/linkerd-gamma
+	-rm -f linkerd-gamma
 .PHONY: clean
 
 clobber: clean
@@ -33,10 +33,10 @@ images image: registry-check
 .PHONY: images image
 
 # This is just an alias
-cli: cmd/linkerd-gamma
+cli: linkerd-gamma
 
-cmd/linkerd-gamma:
-	go build -o cmd/linkerd-gamma ./cmd/
+linkerd-gamma:
+	go build -o linkerd-gamma ./cmd/
 .PHONY: cmd/linkerd-gamma
 
 deploy: images k8s/faces-gui.yaml k8s/faces.yaml
